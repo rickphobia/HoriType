@@ -1,2 +1,1 @@
-pycache/**/*.pyc
-testing/
+__pycache__/*.pyc
