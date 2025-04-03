@@ -1,0 +1,33 @@
+1.powers up with diff colours popping up random 
+    :golden color 'clear'to clear all the words on the current screen
+    :blue color 'freeze' to freeze the screen for 3 seconds
+    :slowdown
+    :reverse
+
+    type once to acquire, type again to use it 
+
+
+2. cases to unlock font and powers up
+
+
+3. add more settings
+    - font
+    - words generated/s 
+
+    - show the current settings with diff color to stand out
+
+
+    - extra difficulty, like words from above and right to down and left
+
+
+    - allow powers up
+
+    - symbol 
+
+4. fix backspace 
+
+5. leaderboard
+
+6.algorithem for word and input matching 
+
+7.built in update 
