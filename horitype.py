@@ -52,6 +52,7 @@ class HoriType:
 
     def _update_screen(self):
         self.dt = self.clock.tick(60)/1000
+        pygame.mouse.set_visible(False)
 
         self.screen.fill((0,0,0))
         if self.settings.game_active:
