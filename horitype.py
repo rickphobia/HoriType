@@ -2,7 +2,7 @@ import pygame
 from input import Input 
 from settings import Settings
 from prep_word import PrepMsg
-class Horitype:
+class HoriType:
     def __init__(self):
         pygame.init()
         self.screen = pygame.display.set_mode((0,0), pygame.FULLSCREEN)
@@ -66,5 +66,5 @@ class Horitype:
         self.k_input._reaching_right()
         pygame.display.flip()
 if __name__ == '__main__':
-    tg = Horitype()
+    tg = HoriType()
     tg.run_game()

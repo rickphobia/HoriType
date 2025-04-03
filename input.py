@@ -62,7 +62,7 @@ class Input:
                 if event.key == pygame.K_RETURN:
                     
                     ans = ''.join(self.user_input)
-                    ans = ans.lower()
+                    ans = ans.lower().strip()
                     if ans == 'start':
                         self.settings.game_active = True
                         self.settings.initialize_stats()
