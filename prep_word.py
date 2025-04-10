@@ -3,6 +3,7 @@ import pygame
 class PrepMsg:
     def __init__(self,tg):
         self.screen = tg.screen
+        self.settings = tg.settings
         self.screen_rect = self.screen.get_rect()
         self.width, self.height = pygame.display.get_surface().get_size()
         self.width_center, self.height_center = self.width/2, self.height/2
@@ -31,6 +32,9 @@ class PrepMsg:
         word = 'SETTINGS'
         self._display_msg(word,self.width_center-100,self.height_center)
 
+    def show_max_health(self,max_health):
+        word = f'Max Health = {max_health}'
+        self._display_msg(word,self.width_center,self.height_center+100)
 
     def show_word_speed(self,word_speed):
         word = f"Word speed = {word_speed}"

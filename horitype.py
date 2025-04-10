@@ -2,6 +2,7 @@ import pygame
 from input import Input 
 from settings import Settings
 from prep_word import PrepMsg
+from health import Health
 class HoriType:
     def __init__(self):
         pygame.init()
@@ -17,6 +18,7 @@ class HoriType:
         self.FIVESEC = pygame.USEREVENT+1
         pygame.time.set_timer(self.FIVESEC, 700)
         self.user_input = self.k_input._key_input()
+        self.health = Health(self)
 
     def run_game(self):
         while True:
@@ -58,11 +60,13 @@ class HoriType:
         if self.settings.game_active:
             self.k_input._update_text()
             self.duration = pygame.time.get_ticks()
+            self.health.blitme()
         if not self.settings.game_active:
             self._start_end_screen()
 
             if self.settings.go_settings:
                 self.prep_word.show_word_speed(self.settings.word_speed)
+                self.prep_word.show_max_health(self.settings.max_health)
         self._update_input()
         self.k_input._reaching_right()
         pygame.display.flip()

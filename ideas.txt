@@ -28,6 +28,6 @@
 
 5. leaderboard
 
-6.algorithem for word and input matching 
+6.algorithm for word and input matching 
 
 7.built in update 

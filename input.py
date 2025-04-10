@@ -28,6 +28,11 @@ class Input:
         for word in self.text_gen.copy():
   
             if word.rect.right >= self.screen_rect.right:
+                self.text_gen.remove(word)
+                self.settings.health_remain -= 1 
+                print('Hit')
+
+            if self.settings.health_remain == 0:
                 self.settings.game_active = False 
                 for word in self.text_gen.copy():
                     self.text_gen.remove(word)
@@ -62,7 +67,7 @@ class Input:
                 if event.key == pygame.K_RETURN:
                     
                     ans = ''.join(self.user_input)
-                    ans = ans.lower().strip()
+                    ans = ans.strip()
                     if ans == 'start':
                         self.settings.game_active = True
                         self.settings.initialize_stats()
@@ -75,6 +80,11 @@ class Input:
                             self.settings.word_speed = int(parts[2])
                             
 
+                    if ans.startswith("max"):
+                        print('Yes')
+                        parts = ans.split()
+                        if len(parts) >= 3 and parts[2].isdigit():
+                            self.settings.max_health = int(parts[2])
                                 
 
                     for word_sprite in self.text_gen.copy():
