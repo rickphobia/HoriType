@@ -8,7 +8,6 @@ class PrepMsg:
         self.width, self.height = pygame.display.get_surface().get_size()
         self.width_center, self.height_center = self.width/2, self.height/2
         self.font = pygame.font.SysFont(None, 50)
-        self.color = ((255,0,0))
 
     def game_ends(self):
         word = 'Game Ends'
@@ -43,7 +42,7 @@ class PrepMsg:
     # def show_word_gen(self):
     #     word = "Words Generated per seconds = "
 
-    def _display_msg(self,msg,pos_x, pos_y):
-        self.image = self.font.render(msg,True,self.color)
+    def _display_msg(self,msg,pos_x, pos_y,color = (255,0,0) ):
+        self.image = self.font.render(msg,True,color)
         self.rect = self.image.get_rect()
         self.screen.blit(self.image, (pos_x, pos_y))

@@ -15,9 +15,9 @@ class Gen_Ran_Word(Sprite):
         self.rect = self.image.get_rect()
         self.rect.y = randint(10,1000)
         self.x = float(self.rect.x)
-        self.dir = 1 
+        
 
     def update(self):
-        self.x += self.settings.word_speed * self.dir
+        self.x += self.settings.word_speed * self.settings.dir
         self.rect.x = self.x
 

@@ -3,6 +3,7 @@ import sys
 from text_gen import Gen_Ran_Word
 import random 
 from prep_word import PrepMsg
+from random import randint 
 from time import sleep
 class Input:
     def __init__(self,tg,ui):
@@ -13,6 +14,10 @@ class Input:
         self.text_gen = pygame.sprite.Group()
         self.user_input = ui
         self.prep_word = PrepMsg(tg)
+        self.invincible_sound_effect = 'images/invincible.mp3'
+        self.reverse_se = 'images/reverse.mp3'
+        self.freeze_se = 'images/freeze.mp3'
+        self.timeslow_se = 'images/timeslow.mp3'
         self.CREATEWORD = pygame.USEREVENT +1
         self.CREATEPOWERSUP = pygame.USEREVENT +2 
         pygame.time.set_timer(self.CREATEWORD,100)  
@@ -20,17 +25,18 @@ class Input:
 
         # self.reaching_right = True
 
+
     def _update_text(self):
-        self.text_gen.update()
+        if self.settings.gen_move_text:
+            self.text_gen.update()
         self.text_gen.draw(self.screen)
 
     def _reaching_right(self):
-        # while self.reaching_right:
             for word in self.text_gen.copy():
                 if word.rect.right >= self.screen_rect.right:
                     self.text_gen.remove(word)
-                    self.settings.health_remain -= 1 
-                    print('Hit')
+                    if self.settings.reaching_right:
+                        self.settings.health_remain -= 1 
 
                 if self.settings.health_remain == 0:
                     self.settings.game_active = False 
@@ -39,7 +45,8 @@ class Input:
         
     def _create_word(self,ranword):
         words = Gen_Ran_Word(self,ranword)
-        self.text_gen.add(words) 
+        if self.settings.gen_move_text:
+            self.text_gen.add(words) 
 
     def _create_powers_up (self,ran_powersup,power_color):
         powersup = Gen_Ran_Word(self,ran_powersup,color=power_color)
@@ -59,7 +66,7 @@ class Input:
             'freeze': (147,249,255),
             'reverse' : (0,255,0),
             'invincible': (200,65,45), 
-            'time' : (225,235,237)
+            'timeslow' : (64,64,64),
         }   
         ran_powersup = random.choice(list(self.powers_dict.items()))
         power = ran_powersup[0]
@@ -100,9 +107,62 @@ class Input:
         else: 
             self.user_input.append(event.unicode)
 
+    def _getting_powersup(self,word_sprite):
+        if word_sprite.word == 'invincible':
+            self.settings.invincible = True 
 
+        if word_sprite.word == 'freeze':
+            self.settings.freeze = True 
+
+        if word_sprite.word == 'clear':
+            self.settings.clear = True 
+
+        if word_sprite.word == 'timeslow':
+            self.settings.time_slow = True 
+
+        if word_sprite.word == 'reverse':
+            self.settings.reverse = True 
+
+    def _play_invinsible_se(self):
+        pygame.mixer.music.load(self.invincible_sound_effect)
+        pygame.mixer.music.play()
+    def _play_freeze_se(self):
+        pygame.mixer.music.load(self.freeze_se)
+        pygame.mixer.music.play()
+    def _play_timeslow_se(self):
+        pygame.mixer.music.load(self.timeslow_se)
+        pygame.mixer.music.play()
+    def _play_reverse_se(self):
+        pygame.mixer.music.load(self.reverse_se)
+        pygame.mixer.music.play()
+
+        
     def _process_input(self,ans):
         ans = ''.join(self.user_input).strip()
+        if self.settings.clear and ans =='clear':
+            self.text_gen.empty()
+            self.settings.clear = False
+        
+        if self.settings.invincible and ans == 'invincible':
+            self.settings.invincible_active = True 
+            self._play_invinsible_se()
+            self.invincible_start = pygame.time.get_ticks()
+        
+        if self.settings.reverse and ans == 'reverse':
+            self.settings.reverse_active = True 
+            self._play_reverse_se()
+            self.reverse_start = pygame.time.get_ticks()
+
+        if self.settings.freeze and ans == 'freeze':
+            self.settings.freeze_active = True 
+            self._play_freeze_se()
+            self.freeze_start = pygame.time.get_ticks()
+
+        if self.settings.time_slow and ans == 'timeslow':
+            self.settings.time_slow_active = True
+            self._play_timeslow_se() 
+            self.time_slow_start = pygame.time.get_ticks()
+
         if ans == 'start':
             self.settings.game_active = True
             self.settings.initialize_stats()
@@ -118,17 +178,7 @@ class Input:
 
         for word_sprite in self.text_gen.copy():
             if word_sprite.word == ans:
-                if word_sprite.word == 'invinsible':
-                    self.reaching_right = False
-                    sleep(3)
-                    self.reaching_right = True 
-
-                if word_sprite.word == 'freeze':
-                    
-                    sleep(3)
-
-                if word_sprite.word == 'clear':
-                    self.text_gen.empty()
+                self._getting_powersup(word_sprite)
                 self.text_gen.remove(word_sprite)
                 ans = []
                 self.settings.word_count += 1 
@@ -140,7 +190,7 @@ class Input:
     def _handle_word_speed_settings(self,ans):
             parts = ans.split()
             if len(parts) >= 3 and parts[2].isdigit():
-                self.settings.word_speed = int(parts[2])
+                self.settings.word_speed_const = int(parts[2])
     
     def _handle_max_health_settings(self,ans):
             parts = ans.split()
