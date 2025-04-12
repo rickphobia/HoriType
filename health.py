@@ -6,8 +6,8 @@ class Health:
         self.screen = ht.screen
         self.screen_rect = self.screen.get_rect()
         self.settings = ht.settings
-        health_path= 'images/health.bmp'
-        empty_health_path = 'images/empty_health.bmp'
+        health_path= 'E:\\programming\\project\\horitype\\images\\health.bmp'
+        empty_health_path = 'E:\\programming\\project\\horitype\\images\\empty_health.bmp'
         self.health = pygame.image.load(health_path)
         self.health = pygame.transform.scale(self.health,(70,70))
 
