@@ -21,12 +21,9 @@ class Input:
         self.text_gen.draw(self.screen)
         # print()
         # self._reaching_right()
-
-    
+        
     def _reaching_right(self):
-  
         for word in self.text_gen.copy():
-  
             if word.rect.right >= self.screen_rect.right:
                 self.text_gen.remove(word)
                 self.settings.health_remain -= 1 
