@@ -17,6 +17,7 @@ class Input:
         self.invincible_sound_effect = 'images/invincible.mp3'
         self.reverse_se = 'images/reverse.mp3'
         self.freeze_se = 'images/freeze.mp3'
+        self.clear_se = 'images/clear.mp3'
         self.timeslow_se = 'images/timeslow.mp3'
         self.CREATEWORD = pygame.USEREVENT +1
         self.CREATEPOWERSUP = pygame.USEREVENT +2 
@@ -136,11 +137,16 @@ class Input:
         pygame.mixer.music.load(self.reverse_se)
         pygame.mixer.music.play()
 
+    def _play_clear_se(self):
+        pygame.mixer.music.load(self.clear_se)
+        pygame.mixer.music.play()
+
         
     def _process_input(self,ans):
         ans = ''.join(self.user_input).strip()
         if self.settings.clear and ans =='clear':
             self.text_gen.empty()
+            self._play_clear_se()
             self.settings.clear = False
         
         if self.settings.invincible and ans == 'invincible':
