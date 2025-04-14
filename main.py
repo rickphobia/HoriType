@@ -50,8 +50,8 @@ class HoriType:
     def showing_invincible(self):
         self._showing_powers_up_(self.settings.invincible,'*', self.width_ctr-15, 5, (200,65,65))
 
-    def showing_time_slow(self):
-        self._showing_powers_up_(self.settings.time_slow,'*', self.width_ctr+15, 5, (225,235,237))
+    def showing_timeslow(self):
+        self._showing_powers_up_(self.settings.timeslow,'*', self.width_ctr+15, 5, (225,235,237))
     
     def showing_freeze(self):
         self._showing_powers_up_(self.settings.freeze,'*', self.width_ctr+10, 5, (147,249,255))
@@ -102,10 +102,10 @@ class HoriType:
             self.showing_invincible()
             self.showing_freeze()
             self.showing_reverse()
-            self.showing_time_slow()
+            self.showing_timeslow()
             self._powersup_times('invincible_active', 'invincible',  'invincible_start', 'invincible_duration','reaching_right', False, True)
             self._powersup_times('reverse_active', 'reverse', 'reverse_start','reverse_duration', 'dir', -1, 1 )
-            self._powersup_times('time_slow_active', 'time_slow', 'time_slow_start', 'timeslow_duration', 'word_speed', 0.1, "word_speed_const")
+            self._powersup_times('timeslow_active', 'timeslow', 'timeslow_start', 'timeslow_duration', 'word_speed', 0.1, "word_speed_const")
             self._powersup_times('freeze_active', 'freeze', 'freeze_start', 'freeze_duration', 'gen_move_text',False,True)
             self.health.blitme()
 

@@ -14,7 +14,7 @@ class Input:
         self.text_gen = pygame.sprite.Group()
         self.user_input = ui
         self.prep_word = PrepMsg(tg)
-        self.invincible_sound_effect = 'images/invincible.mp3'
+        self.invincible_se = 'images/invincible.mp3'
         self.reverse_se = 'images/reverse.mp3'
         self.freeze_se = 'images/freeze.mp3'
         self.clear_se = 'images/clear.mp3'
@@ -108,6 +108,7 @@ class Input:
         else: 
             self.user_input.append(event.unicode)
 
+    # can refactor 
     def _getting_powersup(self,word_sprite):
         if word_sprite.word == 'invincible':
             self.settings.invincible = True 
@@ -119,7 +120,7 @@ class Input:
             self.settings.clear = True 
 
         if word_sprite.word == 'timeslow':
-            self.settings.time_slow = True 
+            self.settings.timeslow= True 
 
         if word_sprite.word == 'reverse':
             self.settings.reverse = True 
@@ -128,34 +129,46 @@ class Input:
         pygame.mixer.music.load(se)
         pygame.mixer.music.play()
 
-    def _using_powers_up(self,ans):
+    def _activate_powers_up(self,ans,trigger, se):
+        active_attr = f"{trigger}_active"
+        start_attr = f"{trigger}_start"
+        if getattr(self.settings,trigger) and ans == trigger:
+            setattr(self.settings,active_attr, True)
+            self._play_powersup_se(se)
+            setattr(self.settings,start_attr,pygame.time.get_ticks())
+
+    def _activate_clear_powersup(self,ans):
         if self.settings.clear and ans =='clear':
             self.text_gen.empty()
             self._play_powersup_se(self.clear_se)
             self.settings.clear = False
-        
-        if self.settings.invincible and ans == 'invincible':
-            self.settings.invincible_active = True 
-            self._play_powersup_se(self.invincible_sound_effect)
-            self.settings.invincible_start = pygame.time.get_ticks()
-        
-        if self.settings.reverse and ans == 'reverse':
-            self.settings.reverse_active = True 
-            self._play_powersup_se(self.reverse_se)
-            self.settings.reverse_start = pygame.time.get_ticks()
 
-        if self.settings.freeze and ans == 'freeze':
-            self.settings.freeze_active = True 
-            self._play_powersup_se(self.freeze_se)
-            self.settings.freeze_start = pygame.time.get_ticks()
+    def _using_powers_up(self,ans):
+        #used chatgpt to initialize ideas as well, the rest did i with my own 
+        self._activate_clear_powersup(ans)
+        self._activate_powers_up(
+            ans = ans, 
+            trigger = 'invincible',
+            se = self.invincible_se,
+        )
+        self._activate_powers_up(
+            ans = ans, 
+            trigger = 'freeze',
+            se = self.freeze_se
+        )
+        self._activate_powers_up(
+            ans = ans, 
+            trigger = 'timeslow',
+            se = self.timeslow_se
+        )
+        self._activate_powers_up(
+            ans = ans, 
+            trigger = 'reverse',
+            se = self.reverse_se
+        )
 
-        if self.settings.time_slow and ans == 'timeslow':
-            self.settings.time_slow_active = True
-            self._play_powersup_se(self.timeslow_se)
-            self.settings.time_slow_start = pygame.time.get_ticks()
         
 
-        # return self.invincible_start, self.reverse_start ,self.freeze_start, self.time_slow_start
         
     def _process_input(self):
         ans = ''.join(self.user_input).strip()

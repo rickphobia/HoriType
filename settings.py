@@ -18,9 +18,9 @@ class Settings:
         self.reverse = False 
         self.reverse_active = False 
         self.dir = 1 
-        
-        self.time_slow = False 
-        self.time_slow_active  = False 
+
+        self.timeslow= False 
+        self.timeslow_active  = False 
 
         self.freeze = False 
         self.freeze_active  = False 
@@ -30,7 +30,7 @@ class Settings:
         self.reverse_duration = 3000
         self.freeze_duration = 3000
         self.invincible_start = 0 
-        self.time_slow_start = 0 
+        self.timeslow_start = 0 
         self.reverse_start = 0 
         self.freeze_start = 0 
 
@@ -38,10 +38,10 @@ class Settings:
     def initialize_stats(self):
         self.reverse_active = False 
         self.invincible_start = 0 
-        self.time_slow_start = 0 
+        self.timeslow_start = 0 
         self.reverse_start = 0 
         self.freeze_start = 0 
-        self.time_slow_active  = False 
+        self.timeslow_active  = False 
         self.freeze_active  = False 
         self.reaching_right = True 
         self.invincible_active = False
@@ -51,5 +51,5 @@ class Settings:
         self.invincible = False
         self.clear = False
         self.reverse = False 
-        self.time_slow = False 
+        self.timeslow= False 
         self.freeze = False 
