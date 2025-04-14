@@ -11,6 +11,7 @@ class HoriType:
         self.settings = Settings()
         self.clock = pygame.time.Clock()
         self.prep_word = PrepMsg(self)
+        self.width_ctr = self.prep_word.width_center  
         self.font = pygame.font.SysFont(None, 50)
         self.color = ((255,255,255))
         self.user_input = [] 
@@ -40,17 +41,23 @@ class HoriType:
         self.screen.blit(self.msg_image, self.msg_rect)
     # def _settings_scene(self):
 
-    def showing_powers_up_(self):
-        if self.settings.clear:
-            self.prep_word._display_msg('*',self.prep_word.width_center, 5, (255,215,0))
-        if self.settings.invincible:
-            self.prep_word._display_msg('*',self.prep_word.width_center-15, 5, (200,65,45))
-        if self.settings.time_slow:
-            self.prep_word._display_msg('*',self.prep_word.width_center+15, 5, (225,235,237))
-        if self.settings.freeze:
-            self.prep_word._display_msg('*',self.prep_word.width_center+10, 5, (147,249,255))
-        if self.settings.reverse:
-            self.prep_word._display_msg('*',self.prep_word.width_center-10, 5, (0,255,0))
+    def _showing_powers_up_(self,powerups,emoji,pos_x, pos_y,color):
+        if powerups:
+            self.prep_word._display_msg(emoji,pos_x,pos_y,color)
+    def showing_clear(self):
+        self._showing_powers_up_(self.settings.clear,'*', self.width_ctr, 5, (255,215,0))
+
+    def showing_invincible(self):
+        self._showing_powers_up_(self.settings.invincible,'*', self.width_ctr-15, 5, (200,65,65))
+
+    def showing_time_slow(self):
+        self._showing_powers_up_(self.settings.time_slow,'*', self.width_ctr+15, 5, (225,235,237))
+    
+    def showing_freeze(self):
+        self._showing_powers_up_(self.settings.freeze,'*', self.width_ctr+10, 5, (147,249,255))
+
+    def showing_reverse(self):
+        self._showing_powers_up_(self.settings.reverse,'*', self.width_ctr-10, 5, (0,255,0))
     def _start_end_screen(self):
         if self.settings.word_count > 0:
             self.prep_word.game_ends()
@@ -60,60 +67,28 @@ class HoriType:
         self.prep_word.show_start_button()
         self.prep_word.show_settings()
 
-    def _freeze_times (self):
-        if self.settings.freeze_active:
-            current_time = pygame.time.get_ticks()
-            if current_time - self.k_input.freeze_start >= self.settings.freeze_duration:
-                self.settings.freeze_active = False
-                self.settings.freeze = False
-            else:
-                self.settings.gen_move_text = False
 
+#use chatgpt to help and just know getattr and setattr
+# why getattr, and setattr, because normal attr doesnt change the real attr only changes the onpy
+#getattr and setattr changes the attr fundamentally
+    def _powersup_times(self,active_attr,powerup_attr,start_attr,duration_attr,effect_attr,effect_on, effect_off):
+        if getattr(self.settings, active_attr):
+            current_time = pygame.time.get_ticks()
+            start_time = getattr(self.settings, start_attr)
+            duration = getattr(self.settings, duration_attr)
+            if current_time - start_time >= duration:
+                setattr(self.settings, powerup_attr, False)
+                setattr(self.settings,active_attr, False)
+
+            else: 
+                setattr(self.settings, effect_attr, effect_on)
         else:
-            self.settings.gen_move_text = True 
-
-    def _timeslow_times(self):
-        if self.settings.time_slow_active:
-            current_time = pygame.time.get_ticks()
-            if current_time - self.k_input.time_slow_start >= self.settings.timeslow_duration:
-                self.settings.time_slow_active = False
-                self.settings.time_slow = False
-
+            #cuz computer dk word_speed_const is a reference str, so u have to set value from the word speed const and use it 
+            if isinstance(effect_off,str):
+                offvalue = getattr(self.settings, effect_off)
             else:
-                self.settings.word_speed = self.settings.word_speed_slowdown 
-
-        else:
-            self.settings.word_speed = self.settings.word_speed_const
-
-
-    def _reverse_times(self):
-        if self.settings.reverse_active:
-            current_time = pygame.time.get_ticks()
-            if current_time - self.k_input.reverse_start >= self.settings.reverse_duration:
-                self.settings.reverse = False
-                self.settings.reverse_active = False 
-
-            else:
-                self.settings.dir = -1
-
-        else: 
-            self.settings.dir = 1 
-
-
-
-
-    def _invincible_times(self):
-        if self.settings.invincible_active:
-            current_time = pygame.time.get_ticks()
-            if current_time - self.k_input.invincible_start >= self.settings.invincible_duration:
-                self.settings.invincible_active = False 
-                self.settings.invincible= False 
-
-            else:
-                self.settings.reaching_right = False 
-
-        else:
-            self.settings.reaching_right= True 
+                offvalue = effect_off
+            setattr(self.settings, effect_attr, offvalue)
 
     def _update_screen(self):
         self.dt = self.clock.tick(60)/1000
@@ -123,12 +98,17 @@ class HoriType:
         if self.settings.game_active:
             self.k_input._update_text()
             self.duration = pygame.time.get_ticks()
-            self.showing_powers_up_()
-            self._invincible_times()
-            self._freeze_times()
-            self._timeslow_times()
-            self._reverse_times()
+            self.showing_clear()
+            self.showing_invincible()
+            self.showing_freeze()
+            self.showing_reverse()
+            self.showing_time_slow()
+            self._powersup_times('invincible_active', 'invincible',  'invincible_start', 'invincible_duration','reaching_right', False, True)
+            self._powersup_times('reverse_active', 'reverse', 'reverse_start','reverse_duration', 'dir', -1, 1 )
+            self._powersup_times('time_slow_active', 'time_slow', 'time_slow_start', 'timeslow_duration', 'word_speed', 0.1, "word_speed_const")
+            self._powersup_times('freeze_active', 'freeze', 'freeze_start', 'freeze_duration', 'gen_move_text',False,True)
             self.health.blitme()
+
         if not self.settings.game_active:
             self._start_end_screen()
 

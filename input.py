@@ -103,7 +103,7 @@ class Input:
         if event.key == pygame.K_SPACE:
             self.user_input.append(' ')
         if event.key == pygame.K_RETURN:
-            self._process_input(event)
+            self._process_input()
 
         else: 
             self.user_input.append(event.unicode)
@@ -124,51 +124,42 @@ class Input:
         if word_sprite.word == 'reverse':
             self.settings.reverse = True 
 
-    def _play_invinsible_se(self):
-        pygame.mixer.music.load(self.invincible_sound_effect)
-        pygame.mixer.music.play()
-    def _play_freeze_se(self):
-        pygame.mixer.music.load(self.freeze_se)
-        pygame.mixer.music.play()
-    def _play_timeslow_se(self):
-        pygame.mixer.music.load(self.timeslow_se)
-        pygame.mixer.music.play()
-    def _play_reverse_se(self):
-        pygame.mixer.music.load(self.reverse_se)
+    def _play_powersup_se(self,se):
+        pygame.mixer.music.load(se)
         pygame.mixer.music.play()
 
-    def _play_clear_se(self):
-        pygame.mixer.music.load(self.clear_se)
-        pygame.mixer.music.play()
-
-        
-    def _process_input(self,ans):
-        ans = ''.join(self.user_input).strip()
+    def _using_powers_up(self,ans):
         if self.settings.clear and ans =='clear':
             self.text_gen.empty()
-            self._play_clear_se()
+            self._play_powersup_se(self.clear_se)
             self.settings.clear = False
         
         if self.settings.invincible and ans == 'invincible':
             self.settings.invincible_active = True 
-            self._play_invinsible_se()
-            self.invincible_start = pygame.time.get_ticks()
+            self._play_powersup_se(self.invincible_sound_effect)
+            self.settings.invincible_start = pygame.time.get_ticks()
         
         if self.settings.reverse and ans == 'reverse':
             self.settings.reverse_active = True 
-            self._play_reverse_se()
-            self.reverse_start = pygame.time.get_ticks()
+            self._play_powersup_se(self.reverse_se)
+            self.settings.reverse_start = pygame.time.get_ticks()
 
         if self.settings.freeze and ans == 'freeze':
             self.settings.freeze_active = True 
-            self._play_freeze_se()
-            self.freeze_start = pygame.time.get_ticks()
+            self._play_powersup_se(self.freeze_se)
+            self.settings.freeze_start = pygame.time.get_ticks()
 
         if self.settings.time_slow and ans == 'timeslow':
             self.settings.time_slow_active = True
-            self._play_timeslow_se() 
-            self.time_slow_start = pygame.time.get_ticks()
+            self._play_powersup_se(self.timeslow_se)
+            self.settings.time_slow_start = pygame.time.get_ticks()
+        
 
+        # return self.invincible_start, self.reverse_start ,self.freeze_start, self.time_slow_start
+        
+    def _process_input(self):
+        ans = ''.join(self.user_input).strip()
+        self._using_powers_up(ans)
         if ans == 'start':
             self.settings.game_active = True
             self.settings.initialize_stats()
@@ -189,6 +180,8 @@ class Input:
                 ans = []
                 self.settings.word_count += 1 
         self.user_input.clear()
+
+        return ans 
  
 
 
