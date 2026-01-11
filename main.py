@@ -121,6 +121,13 @@ class HoriType:
         self._update_input()
         self.k_input._reaching_right()
         pygame.display.flip()
-if __name__ == '__main__':
+# ... (End of HoriType class) ...
+
+# Define the main entry point (Required for Web)
+async def main():
     tg = HoriType()
-    asyncio.run(tg.run_game())
+    await tg.run_game()
+
+if __name__ == '__main__':
+    # This block runs on your Laptop
+    asyncio.run(main())
