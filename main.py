@@ -12,7 +12,6 @@ class HoriType:
         self.settings = Settings()
         self.clock = pygame.time.Clock()
         self.prep_word = PrepMsg(self)
-        self.width_ctr = self.prep_word.width_center  
         self.font = pygame.font.Font(None, 50)
         self.color = ((255,255,255))
         self.user_input = [] 
@@ -48,19 +47,19 @@ class HoriType:
         if powerups:
             self.prep_word._display_msg(emoji,pos_x,pos_y,color)
     def showing_clear(self):
-        self._showing_powers_up_(self.settings.clear,'*', self.width_ctr, 5, (255,215,0))
+        self._showing_powers_up_(self.settings.clear,'*', self.screen_rect.centerx, 5, (255,215,0))
 
     def showing_invincible(self):
-        self._showing_powers_up_(self.settings.invincible,'*', self.width_ctr-15, 5, (200,65,65))
+        self._showing_powers_up_(self.settings.invincible,'*', self.screen_rect.centerx - 15, 5, (200,65,65))
 
     def showing_timeslow(self):
-        self._showing_powers_up_(self.settings.timeslow,'*', self.width_ctr+15, 5, (225,235,237))
+        self._showing_powers_up_(self.settings.timeslow,'*', self.screen_rect.centerx + 15, 5, (225,235,237))
     
     def showing_freeze(self):
-        self._showing_powers_up_(self.settings.freeze,'*', self.width_ctr+10, 5, (147,249,255))
+        self._showing_powers_up_(self.settings.freeze,'*', self.screen_rect.centerx + 10, 5, (147,249,255))
 
     def showing_reverse(self):
-        self._showing_powers_up_(self.settings.reverse,'*', self.width_ctr-10, 5, (0,255,0))
+        self._showing_powers_up_(self.settings.reverse,'*', self.screen_rect.centerx - 10, 5, (0,255,0))
     def _start_end_screen(self):
         if self.settings.word_count > 0:
             self.prep_word.game_ends()
@@ -106,10 +105,10 @@ class HoriType:
             self.showing_freeze()
             self.showing_reverse()
             self.showing_timeslow()
-            self._powersup_times('invincible_active', 'invincible',  'invincible_start', 'invincible_duration','reaching_right', False, True)
-            self._powersup_times('reverse_active', 'reverse', 'reverse_start','reverse_duration', 'dir', -1, 1 )
+            self._powersup_times('invincible_active', 'invincible', 'invincible_start', 'invincible_duration', 'reaching_right', False, True)
+            self._powersup_times('reverse_active', 'reverse', 'reverse_start', 'reverse_duration', 'dir', -1, 1 )
             self._powersup_times('timeslow_active', 'timeslow', 'timeslow_start', 'timeslow_duration', 'word_speed', 0.1, "word_speed_const")
-            self._powersup_times('freeze_active', 'freeze', 'freeze_start', 'freeze_duration', 'gen_move_text',False,True)
+            self._powersup_times('freeze_active', 'freeze', 'freeze_start', 'freeze_duration', 'gen_move_text', False, True)
             self.health.blitme()
 
         if not self.settings.game_active:
