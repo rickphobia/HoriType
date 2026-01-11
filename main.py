@@ -1,4 +1,5 @@
 import pygame
+import asyncio
 from input import Input 
 from settings import Settings
 from prep_word import PrepMsg
@@ -20,11 +21,13 @@ class HoriType:
         pygame.time.set_timer(self.FIVESEC, 700)
         self.user_input = self.k_input._key_input()
         self.health = Health(self)
+        self.game_running = True 
 
-    def run_game(self):
-        while True:
+    async def run_game(self):
+        while self.game_running:
             self.k_input._key_input() 
             self._update_screen()
+            await asyncio.sleep(0)
 
             
     def _update_input(self):
@@ -120,4 +123,4 @@ class HoriType:
         pygame.display.flip()
 if __name__ == '__main__':
     tg = HoriType()
-    tg.run_game()
+    asyncio.run(tg.run_game())

@@ -7,7 +7,7 @@ class PrepMsg:
         self.screen_rect = self.screen.get_rect()
         self.width, self.height = pygame.display.get_surface().get_size()
         self.width_center, self.height_center = self.width/2, self.height/2
-        self.font = pygame.font.SysFont(None, 50)
+        self.font = pygame.font.Font(None, 50)
 
     def game_ends(self):
         word = 'Game Ends'

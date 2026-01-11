@@ -1,10 +1,8 @@
 import pygame 
-import sys 
+import os  
 from text_gen import Gen_Ran_Word
 import random 
 from prep_word import PrepMsg
-from random import randint 
-from time import sleep
 class Input:
     def __init__(self,tg,ui):
         self.screen = tg.screen
@@ -14,11 +12,20 @@ class Input:
         self.text_gen = pygame.sprite.Group()
         self.user_input = ui
         self.prep_word = PrepMsg(tg)
-        self.invincible_se = 'images/invincible.mp3'
-        self.reverse_se = 'images/reverse.mp3'
-        self.freeze_se = 'images/freeze.mp3'
-        self.clear_se = 'images/clear.mp3'
-        self.timeslow_se = 'images/timeslow.mp3'
+        try:
+            self.invincible_se = pygame.mixer.Sound('images/invincible.mp3')
+            self.reverse_se = pygame.mixer.Sound('images/reverse.mp3')
+            self.freeze_se = pygame.mixer.Sound('images/freeze.mp3')
+            self.clear_se = pygame.mixer.Sound('images/clear.mp3')
+            self.timeslow_se = pygame.mixer.Sound('images/timeslow.mp3')
+
+        except: 
+            print('File Missing')
+            self.invincible_se = None
+            self.reverse_se = None
+            self.freeze_se = None
+            self.clear_se = None
+            self.timeslow_se = None
         self.CREATEWORD = pygame.USEREVENT +1
         self.CREATEPOWERSUP = pygame.USEREVENT +2 
         pygame.time.set_timer(self.CREATEWORD,100)  
@@ -54,12 +61,16 @@ class Input:
         self.text_gen.add(powersup)
 
     def _gen_ran_word(self):
-        filepath = 'E:\\programming\\project\\horitype\\database.txt'
-        with open(filepath) as fp:
-            self.wordlist = [word.strip() for word in fp.readlines()]
-        ran_word = random.choice(self.wordlist)
-        self.word = ran_word
-        self._create_word(ran_word)
+        filepath ='database.txt'
+        try:
+            with open(filepath,'r') as fp:
+                self.wordlist = [word.strip() for word in fp.readlines()]
+            ran_word = random.choice(self.wordlist)
+            self.word = ran_word
+            self._create_word(ran_word)     
+        except FileNotFoundError:
+            print("Error, database.txt nof found ")
+            self._create_word("ERRROR")
 
     def _gen_ran_powersup(self):
         self.powers_dict = {
@@ -77,7 +88,7 @@ class Input:
     def _key_input(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT: 
-                sys.exit()
+                self.tg.game_runninng = False 
             if self.settings.game_active:
                 self._generate_words_powersup(event)
 
@@ -99,7 +110,7 @@ class Input:
         if event.key == pygame.K_BACKSPACE:
             self.user_input.clear()
         if event.key == pygame.K_ESCAPE:
-            sys.exit()
+            self.settings.game_active = False 
         if event.key == pygame.K_SPACE:
             self.user_input.append(' ')
         if event.key == pygame.K_RETURN:
@@ -126,9 +137,8 @@ class Input:
             self.settings.reverse = True 
 
     def _play_powersup_se(self,se):
-        pygame.mixer.music.load(se)
-        pygame.mixer.music.play()
-
+        if se:
+            se.play()
     def _activate_powers_up(self,ans,trigger, se):
         active_attr = f"{trigger}_active"
         start_attr = f"{trigger}_start"
