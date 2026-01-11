@@ -88,7 +88,7 @@ class Input:
     def _key_input(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT: 
-                self.tg.game_runninng = False 
+                self.settings.game_active = False 
             if self.settings.game_active:
                 self._generate_words_powersup(event)
 

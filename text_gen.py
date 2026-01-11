@@ -8,7 +8,7 @@ class Gen_Ran_Word(Sprite):
         self.screen_rect = self.screen.get_rect()
         max_y = self.screen_rect.height - 100 
         self.settings = tg.settings
-        self.font = pygame.font.SysFont(None, 50)
+        self.font = pygame.font.Font(None, 50)
         self.word = ran_word
         self.image = self.font.render(self.word, True, color)
         self.rect = self.image.get_rect()

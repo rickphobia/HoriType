@@ -13,7 +13,7 @@ class HoriType:
         self.clock = pygame.time.Clock()
         self.prep_word = PrepMsg(self)
         self.width_ctr = self.prep_word.width_center  
-        self.font = pygame.font.SysFont(None, 50)
+        self.font = pygame.font.Font(None, 50)
         self.color = ((255,255,255))
         self.user_input = [] 
         self.k_input = Input(self,self.user_input)
