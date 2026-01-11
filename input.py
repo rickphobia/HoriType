@@ -12,20 +12,11 @@ class Input:
         self.text_gen = pygame.sprite.Group()
         self.user_input = ui
         self.prep_word = PrepMsg(tg)
-        try:
-            self.invincible_se = pygame.mixer.Sound('images/invincible.mp3')
-            self.reverse_se = pygame.mixer.Sound('images/reverse.mp3')
-            self.freeze_se = pygame.mixer.Sound('images/freeze.mp3')
-            self.clear_se = pygame.mixer.Sound('images/clear.mp3')
-            self.timeslow_se = pygame.mixer.Sound('images/timeslow.mp3')
-
-        except: 
-            print('File Missing')
-            self.invincible_se = None
-            self.reverse_se = None
-            self.freeze_se = None
-            self.clear_se = None
-            self.timeslow_se = None
+        self.invincible_se = self._load_sound('invincible')
+        self.reverse_se = self._load_sound('reverse')
+        self.freeze_se = self._load_sound('freeze')
+        self.clear_se = self._load_sound('clear')
+        self.timeslow_se = self._load_sound('timeslow')
         self.CREATEWORD = pygame.USEREVENT +1
         self.CREATEPOWERSUP = pygame.USEREVENT +2 
         pygame.time.set_timer(self.CREATEWORD,100)  
@@ -33,7 +24,20 @@ class Input:
 
         # self.reaching_right = True
 
-
+    def _load_sound(self, name):
+        # 1. Try Web (OGG) - Pygbag creates this
+        try:
+            return pygame.mixer.Sound(f'images/{name}-pygbag.ogg')
+        except:
+            pass 
+        
+        # 2. Try Laptop (MP3) - You have this
+        try:
+            return pygame.mixer.Sound(f'images/{name}.mp3')
+        except:
+            print(f"Sound Error: Could not load {name}")
+            return None
+        
     def _update_text(self):
         if self.settings.gen_move_text:
             self.text_gen.update()
