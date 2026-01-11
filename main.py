@@ -7,7 +7,7 @@ from health import Health
 class HoriType:
     def __init__(self):
         pygame.init()
-        self.screen = pygame.display.set_mode((0,0), pygame.FULLSCREEN)
+        self.screen = pygame.display.set_mode((1280, 720))
         self.screen_rect = self.screen.get_rect()
         self.settings = Settings()
         self.clock = pygame.time.Clock()
@@ -66,7 +66,7 @@ class HoriType:
             self.prep_word.game_ends()
             self.prep_word.show_word_count(self.settings.word_count)
             self.prep_word.show_wpm(self.settings.word_count,self.duration)
-            print(self.duration)
+            # print(self.duration)
         self.prep_word.show_start_button()
         self.prep_word.show_settings()
 
@@ -95,7 +95,7 @@ class HoriType:
 
     def _update_screen(self):
         self.dt = self.clock.tick(60)/1000
-        pygame.mouse.set_visible(False)
+        # pygame.mouse.set_visible(False)
 
         self.screen.fill((0,0,0))
         if self.settings.game_active:
