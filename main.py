@@ -27,6 +27,7 @@ class HoriType:
             self.k_input._key_input() 
             self._update_screen()
             await asyncio.sleep(0)
+            
 
             
     def _update_input(self):

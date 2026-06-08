@@ -21,6 +21,7 @@ class Input:
         self.CREATEPOWERSUP = pygame.USEREVENT +2 
         pygame.time.set_timer(self.CREATEWORD,100)  
         pygame.time.set_timer(self.CREATEPOWERSUP, 2000)
+        self._load_database()
 
         # self.reaching_right = True
 
@@ -64,17 +65,18 @@ class Input:
         powersup = Gen_Ran_Word(self,ran_powersup,color=power_color)
         self.text_gen.add(powersup)
 
-    def _gen_ran_word(self):
-        filepath ='database.txt'
+    def _load_database(self):
         try:
-            with open(filepath,'r') as fp:
-                self.wordlist = [word.strip() for word in fp.readlines()]
-            ran_word = random.choice(self.wordlist)
-            self.word = ran_word
-            self._create_word(ran_word)     
+            with open('database.txt', 'r') as fp:
+                self.wordlist = [word.strip() for word in fp.readlines() if word.strip()]
         except FileNotFoundError:
-            print("Error, database.txt nof found ")
-            self._create_word("ERRROR")
+            print("Error: database.txt not found")
+            self.wordlist = ["ERROR"]
+
+    def _gen_ran_word(self):
+        ran_word = random.choice(self.wordlist)
+        self._create_word(ran_word)
+
 
     def _gen_ran_powersup(self):
         self.powers_dict = {
