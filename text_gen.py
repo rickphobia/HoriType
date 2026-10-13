@@ -6,6 +6,7 @@ class Gen_Ran_Word(Sprite):
         self.settings = tg.settings
         self.word = ran_word
         self.lane = lane
+        self.speed_factor = self.settings.speed_factor(ran_word)
         self.image = tg.word_font.render(self.word, True, color)
         self.rect = self.image.get_rect()
         # start just off the left edge so the word slides in instead of popping up
@@ -15,5 +16,5 @@ class Gen_Ran_Word(Sprite):
 
 
     def update(self):
-        self.x += self.settings.word_speed * self.settings.dir
+        self.x += self.settings.word_speed * self.settings.dir * self.speed_factor
         self.rect.x = self.x

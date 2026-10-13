@@ -98,13 +98,26 @@ class Input:
     def close_settings(self):
         self.settings.state = self.settings.prev_state
 
-    def _free_lane(self, width):
-        # a lane is free once every word in it has moved far enough right of the spawn point
+    def _lane_is_free(self, lane, factor):
+        # a lane is free once every word in it has moved far enough right of the spawn point,
+        # and the new word won't catch up with any of them before they reach the red line
         gap = 40
-        free = [
-            lane for lane in range(len(self.lanes))
-            if all(word.rect.left >= gap for word in self.text_gen if word.lane == lane)
-        ]
+        for word in self.text_gen:
+            if word.lane != lane:
+                continue
+            if word.rect.left < gap:
+                return False
+            if factor > word.speed_factor:
+                # all words move by speed * their own factor, so while the word ahead covers
+                # the distance to the red line, the new word closes the gap by this much
+                ahead_travel = (self.death_x - word.rect.right) / word.speed_factor
+                gap_left = word.x - ahead_travel * (factor - word.speed_factor)
+                if gap_left < gap // 2:
+                    return False
+        return True
+
+    def _free_lane(self, factor):
+        free = [lane for lane in range(len(self.lanes)) if self._lane_is_free(lane, factor)]
         if not free:
             return None
         return self.rng.choice(free)
@@ -113,7 +126,7 @@ class Input:
         # no new words while reverse pushes everything back off the left edge
         if not self.settings.gen_move_text or self.settings.reverse_active:
             return
-        lane = self._free_lane(self.word_font.size(text)[0])
+        lane = self._free_lane(self.settings.speed_factor(text))
         if lane is None:
             return
         self.text_gen.add(Gen_Ran_Word(self, text, lane, self.lanes[lane], color=color))

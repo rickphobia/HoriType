@@ -70,9 +70,19 @@ class Settings:
         # words die when their right edge reaches this many pixels from the right of the screen
         self.death_margin = 60
 
+        # long words move slower: from this many letters on, each extra letter
+        # takes a bit off the speed, down to a floor
+        self.long_word_from = 5
+        self.slow_per_letter = 0.07
+        self.min_speed_factor = 0.5
+
     @property
     def game_active(self):
         return self.state == 'playing'
+
+    def speed_factor(self, word):
+        extra = max(0, len(word) - self.long_word_from + 1)
+        return max(self.min_speed_factor, 1 - extra * self.slow_per_letter)
 
     def wpm(self):
         # words typed per minute of play; count at least 5 seconds so the first word doesn't read as 600 wpm
