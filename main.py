@@ -15,10 +15,10 @@ class HoriType:
         self.font = pygame.font.Font(None, 50)
         self.color = ((255,255,255))
         self.line_color = (45, 45, 45)
+        self.death_color = (220, 30, 30)
         self.user_input = []
         self.k_input = Input(self,self.user_input)
         self.health = Health(self)
-        self.duration = 0
         self.game_running = True
 
     async def run_game(self):
@@ -51,22 +51,18 @@ class HoriType:
         bottom = self.screen_rect.height - self.settings.hud_height
         pygame.draw.line(self.screen, self.line_color, (0, top), (self.screen_rect.right, top))
         pygame.draw.line(self.screen, self.line_color, (0, bottom), (self.screen_rect.right, bottom))
+        # red line: a word that touches it is lost
+        death_x = self.k_input.death_x
+        pygame.draw.line(self.screen, self.death_color, (death_x, top), (death_x, bottom), 3)
 
     def _start_end_screen(self):
-        lines = []
-        if self.settings.word_count > 0:
-            lines.append(self.prep_word.game_ends())
-            lines.append(self.prep_word.show_word_count(self.settings.word_count))
-            lines.append(self.prep_word.show_wpm(self.settings.word_count,self.duration))
-        lines.append(self.prep_word.show_start_button())
-        lines.append(self.prep_word.show_settings())
-        if self.settings.go_settings:
-            lines.append(self.prep_word.show_word_speed(self.settings.word_speed_const))
-            lines.append(self.prep_word.show_word_speed_hint())
-            lines.append(self.prep_word.show_max_health(self.settings.max_health))
-            lines.append(self.prep_word.show_max_health_hint())
-        lines.append(self.prep_word.show_hint())
-        self.prep_word.draw_menu(lines)
+        state = self.settings.state
+        if state == 'settings':
+            self.prep_word.show_settings(self.k_input.selected)
+        elif state == 'over':
+            self.prep_word.show_game_over(self.settings.game_time)
+        else:
+            self.prep_word.show_menu()
 
 
 #use chatgpt to help and just know getattr and setattr
@@ -98,7 +94,7 @@ class HoriType:
         self.screen.fill((0,0,0))
         if self.settings.game_active:
             now = pygame.time.get_ticks()
-            self.duration = now - self.settings.game_start
+            self.settings.game_time = now - self.settings.game_start
             self._powersup_times('invincible_active', 'invincible', 'invincible_start', 'invincible_duration', 'reaching_right', False, True)
             self._powersup_times('reverse_active', 'reverse', 'reverse_start', 'reverse_duration', 'dir', -1, 1 )
             self._powersup_times('timeslow_active', 'timeslow', 'timeslow_start', 'timeslow_duration', 'word_speed', 0.1, "word_speed_const")
@@ -107,6 +103,7 @@ class HoriType:
             self.k_input._update_text()
             self.k_input._reaching_right()
             self.prep_word.draw_powerups(now)
+            self.prep_word.draw_score()
             self.health.blitme()
 
         if not self.settings.game_active:

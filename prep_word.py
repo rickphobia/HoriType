@@ -4,11 +4,14 @@ class PrepMsg:
     def __init__(self, tg):
         self.screen = tg.screen
         self.settings = tg.settings
+        self.title_font = pygame.font.Font(None, 96)
         self.font = pygame.font.Font(None, 50)
+        self.big_font = pygame.font.Font(None, 72)
         self.small_font = pygame.font.Font(None, 32)
         self.title_color = (255, 0, 0)
-        self.text_color = (255, 0, 0)
+        self.text_color = (255, 255, 255)
         self.hint_color = (140, 140, 140)
+        self.select_color = (60, 15, 15)
         # We do NOT calculate cx/cy here.
         # The screen might report size (0,0) during startup.
 
@@ -17,54 +20,111 @@ class PrepMsg:
         rect = self.screen.get_rect()
         return rect.centerx, rect.centery
 
-    def game_ends(self):
-        return ('Game Ends', self.font, self.title_color)
+    def _text(self, text, font=None, color=None):
+        return (font or self.font).render(text, True, color or self.text_color)
 
-    def show_word_count(self, word_count):
-        return (f"You have killed {word_count} words", self.font, self.text_color)
+    def _rows(self, pairs, selected=None):
+        # two column block: command on the left, what it does on the right.
+        # settings rows use the big font for both columns and can show one row as selected
+        big = selected is not None
+        lefts = [self._text(left, self.font, color) for left, _, color in pairs]
+        rights = [self._text(right, self.font if big else self.small_font,
+                             self.text_color if big else self.hint_color) for _, right, _ in pairs]
+        pad, col_gap, row_gap = 16, 30, 8
+        left_width = max(image.get_width() for image in lefts)
+        width = pad * 2 + left_width + col_gap + max(image.get_width() for image in rights)
+        row_height = max(image.get_height() for image in lefts + rights) + pad
+        block = pygame.Surface((width, len(pairs) * (row_height + row_gap) - row_gap), pygame.SRCALPHA)
+        for i, (left, right) in enumerate(zip(lefts, rights)):
+            y = i * (row_height + row_gap)
+            if i == selected:
+                block.fill(self.select_color, pygame.Rect(0, y, width, row_height))
+            block.blit(left, left.get_rect(midleft=(pad, y + row_height // 2)))
+            block.blit(right, right.get_rect(midleft=(pad + left_width + col_gap, y + row_height // 2)))
+        return block
 
-    def show_wpm(self, word_count, duration):
-        # WPM = Words Per Minute (60,000 ms); count at least one second so a quick ESC can't divide by zero
-        minutes = max(duration, 1000) / 60000
-        wpm = int(word_count / minutes)
-        return (f"Your WPM is {wpm}", self.font, self.text_color)
+    def _stats(self, stats):
+        # big numbers with a small label underneath, side by side
+        blocks = []
+        for value, label in stats:
+            number = self._text(value, self.big_font)
+            name = self._text(label, self.small_font, self.hint_color)
+            block = pygame.Surface((max(number.get_width(), name.get_width()), number.get_height() + name.get_height() + 4), pygame.SRCALPHA)
+            block.blit(number, number.get_rect(midtop=(block.get_width() // 2, 0)))
+            block.blit(name, name.get_rect(midtop=(block.get_width() // 2, number.get_height() + 4)))
+            blocks.append(block)
+        gap = 70
+        surface = pygame.Surface((sum(b.get_width() for b in blocks) + gap * (len(blocks) - 1), max(b.get_height() for b in blocks)), pygame.SRCALPHA)
+        x = 0
+        for block in blocks:
+            surface.blit(block, (x, 0))
+            x += block.get_width() + gap
+        return surface
 
-    def show_start_button(self):
-        return ('START', self.font, self.text_color)
-
-    def show_settings(self):
-        return ('SETTINGS', self.font, self.text_color)
-
-    def show_hint(self):
-        return ('type a word and press Enter', self.small_font, self.hint_color)
-
-    def show_word_speed(self, word_speed):
-        return (f"Word speed = {word_speed}", self.font, self.text_color)
-
-    def show_word_speed_hint(self):
+    def _commands(self):
         s = self.settings
-        return (f"type 'word speed {s.min_word_speed}-{s.max_word_speed}'", self.small_font, self.hint_color)
+        return self._rows([
+            ('start', 'normal game', self.title_color),
+            ('super', 'start with every power up ready', s.powersup_colors['clear']),
+            ('settings', f'speed {s.word_speed_const}  ·  health {s.max_health}  ·  rate {s.word_rate}', self.title_color),
+        ])
 
-    def show_max_health(self, max_health):
-        return (f'Max Health = {max_health}', self.font, self.text_color)
+    def show_menu(self):
+        self._draw_stack([
+            (self._text('HoriType', self.title_font, self.title_color), 10),
+            (self._text('type a command and press Enter', self.small_font, self.hint_color), 50),
+            (self._commands(), 0),
+        ])
 
-    def show_max_health_hint(self):
+    def show_game_over(self, game_time):
         s = self.settings
-        return (f"type 'max health {s.min_health}-{s.max_health_limit}'", self.small_font, self.hint_color)
+        seconds = game_time // 1000
+        mode = 'super mode' if s.mode == 'super' else 'normal mode'
+        self._draw_stack([
+            (self._text('Game Over', self.title_font, self.title_color), 10),
+            (self._text(mode, self.small_font, self.hint_color), 30),
+            (self._stats([
+                (str(s.word_count), 'words'),
+                (str(s.wpm()), 'wpm'),
+                (f'{seconds // 60}:{seconds % 60:02d}', 'time'),
+            ]), 50),
+            (self._commands(), 16),
+            (self._text('Esc for the main menu', self.small_font, self.hint_color), 0),
+        ])
 
-    def draw_menu(self, lines, gap=12):
-        # stack the lines in a centred column above the bottom hud, so nothing overlaps
+    def show_settings(self, selected):
+        s = self.settings
+        rows = [
+            ('Word speed', f'<  {s.word_speed_const}  >'),
+            ('Max health', f'<  {s.max_health}  >'),
+            ('Word rate', f'<  {s.word_rate}  >'),
+        ]
+        self._draw_stack([
+            (self._text('Settings', self.title_font, self.title_color), 40),
+            (self._rows([(name, value, self.text_color) for name, value in rows], selected=selected), 40),
+            (self._text('Up / Down to choose     Left / Right to change     Enter or Esc to go back', self.small_font, self.hint_color), 10),
+            (self._text("or type:  speed 7   ·   health 5   ·   rate fast", self.small_font, self.hint_color), 0),
+        ])
+
+    def _draw_stack(self, items):
+        # stack surfaces in a centred column above the bottom hud, so nothing overlaps
         # whatever the text length or how many lines are shown
-        lines = [line for line in lines if line]
-        images = [font.render(text, True, color) for text, font, color in lines]
-        total = sum(image.get_height() for image in images) + gap * (len(images) - 1)
+        total = sum(surface.get_height() + gap for surface, gap in items)
         rect = self.screen.get_rect()
         area_bottom = rect.height - self.settings.hud_height
-        y = max(self.settings.top_bar_height, (area_bottom - total) // 2)
-        for image in images:
-            image_rect = image.get_rect(midtop=(rect.centerx, y))
-            self.screen.blit(image, image_rect)
-            y += image_rect.height + gap
+        y = max(10, (area_bottom - total) // 2)
+        for surface, gap in items:
+            self.screen.blit(surface, surface.get_rect(midtop=(rect.centerx, y)))
+            y += surface.get_height() + gap
+
+    def draw_score(self):
+        # live words and wpm in the corners of the top bar
+        s = self.settings
+        mid = s.top_bar_height // 2
+        words = self._text(f'words {s.word_count}', self.small_font, self.hint_color)
+        wpm = self._text(f'wpm {s.wpm()}', self.small_font, self.hint_color)
+        self.screen.blit(words, words.get_rect(midleft=(20, mid)))
+        self.screen.blit(wpm, wpm.get_rect(midright=(self.screen.get_width() - 20, mid)))
 
     def draw_powerups(self, now):
         # held power ups sit side by side in the top bar; active ones show their time left

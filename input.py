@@ -5,7 +5,10 @@ from text_gen import Gen_Ran_Word
 from prep_word import PrepMsg
 
 # words the game treats as commands or power ups, so they never show up as normal words
-RESERVED_WORDS = {'start', 'settings', 'clear', 'freeze', 'reverse', 'invincible', 'timeslow'}
+RESERVED_WORDS = {'start', 'super', 'settings', 'menu', 'back', 'clear', 'freeze', 'reverse', 'invincible', 'timeslow'}
+
+# rows on the settings screen, in the order they are shown
+SETTING_ROWS = ['speed', 'health', 'rate']
 
 class Input:
     def __init__(self,tg,ui):
@@ -27,6 +30,8 @@ class Input:
         pygame.time.set_timer(self.CREATEPOWERSUP, self.settings.powersup_interval)
         self.rng = random.Random()
         self.deck = []
+        self.selected = 0
+        self.death_x = self.screen_rect.right - self.settings.death_margin
         self._load_database()
         self._make_lanes()
 
@@ -60,7 +65,7 @@ class Input:
 
     def _reaching_right(self):
             for word in self.text_gen.copy():
-                if word.rect.right >= self.screen_rect.right:
+                if word.rect.right >= self.death_x:
                     self.text_gen.remove(word)
                     if self.settings.reaching_right:
                         self.settings.health_remain -= 1
@@ -68,18 +73,30 @@ class Input:
             if self.settings.game_active and self.settings.health_remain <= 0:
                 self.end_game()
 
-    def start_game(self):
+    def start_game(self, mode='normal'):
+        self.settings.mode = mode
         self.settings.initialize_stats()
-        self.settings.game_active = True
+        self.settings.state = 'playing'
         self.text_gen.empty()
+        self.user_input.clear()
+        pygame.time.set_timer(self.CREATEWORD, self.settings.word_interval)
         # reseed from the clock on every start so each game gets a new word order,
         # even on the web build where the default seed can repeat between page loads
         self.rng.seed(time.time_ns() ^ pygame.time.get_ticks())
         self.deck = []
 
     def end_game(self):
-        self.settings.game_active = False
+        self.settings.state = 'over'
         self.text_gen.empty()
+        # drop whatever was half typed so it doesn't stick to the next command
+        self.user_input.clear()
+
+    def open_settings(self):
+        self.settings.prev_state = self.settings.state
+        self.settings.state = 'settings'
+
+    def close_settings(self):
+        self.settings.state = self.settings.prev_state
 
     def _free_lane(self, width):
         # a lane is free once every word in it has moved far enough right of the spawn point
@@ -136,7 +153,6 @@ class Input:
     def _key_input(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                self.settings.game_active = False
                 return None
             if self.settings.game_active:
                 self._generate_words_powersup(event)
@@ -156,18 +172,45 @@ class Input:
 
 
     def _handle_keydown_events(self,event):
+        state = self.settings.state
         if event.key == pygame.K_BACKSPACE:
             if self.user_input:
                 self.user_input.pop()
         elif event.key == pygame.K_ESCAPE:
             self.user_input.clear()
-            if self.settings.game_active:
+            if state == 'playing':
                 self.end_game()
+            elif state == 'settings':
+                self.close_settings()
+            elif state == 'over':
+                self.settings.state = 'menu'
         elif event.key in (pygame.K_RETURN, pygame.K_KP_ENTER):
             self._process_input()
+        elif state == 'settings' and event.key in (pygame.K_UP, pygame.K_DOWN):
+            step = -1 if event.key == pygame.K_UP else 1
+            self.selected = (self.selected + step) % len(SETTING_ROWS)
+        elif state == 'settings' and event.key in (pygame.K_LEFT, pygame.K_RIGHT):
+            step = -1 if event.key == pygame.K_LEFT else 1
+            self._change_setting(SETTING_ROWS[self.selected], step)
         elif event.unicode and event.unicode.isprintable():
             if len(self.user_input) < self.settings.max_input_chars:
                 self.user_input.append(event.unicode)
+
+    def _change_setting(self, row, step):
+        s = self.settings
+        if row == 'speed':
+            s.word_speed_const = min(max(s.word_speed_const + step, s.min_word_speed), s.max_word_speed)
+        elif row == 'health':
+            s.max_health = min(max(s.max_health + step, s.min_health), s.max_health_limit)
+        elif row == 'rate':
+            rates = list(s.word_rates)
+            index = min(max(rates.index(s.word_rate) + step, 0), len(rates) - 1)
+            self._set_word_rate(rates[index])
+
+    def _set_word_rate(self, rate):
+        if rate in self.settings.word_rates:
+            self.settings.word_rate = rate
+            self.settings.word_interval = self.settings.word_rates[rate]
 
     # can refactor
     def _getting_powersup(self,word_sprite):
@@ -223,22 +266,27 @@ class Input:
         ans = ''.join(self.user_input).strip()
         self.user_input.clear()
         command = ans.lower()
+        state = self.settings.state
 
-        if not self.settings.game_active:
+        if state in ('menu', 'over'):
             if command == 'start':
-                self.start_game()
+                self.start_game('normal')
+            elif command == 'super':
+                self.start_game('super')
             elif command == 'settings':
-                self.settings.go_settings = not self.settings.go_settings
-            elif command.startswith("word"):
-                self._handle_word_speed_settings(command)
-            elif command.startswith("max"):
-                self._handle_max_health_settings(command)
+                self.open_settings()
+            elif command == 'menu':
+                self.settings.state = 'menu'
+            return
+
+        if state == 'settings':
+            self._handle_settings_command(command)
             return
 
         if self._using_powers_up(ans):
             return
 
-        # only kill one word per Enter: the one closest to the right edge
+        # only kill one word per Enter: the one closest to the red line
         matches = [word for word in self.text_gen if word.word == ans]
         if matches:
             word_sprite = max(matches, key=lambda word: word.rect.right)
@@ -246,14 +294,17 @@ class Input:
             self.text_gen.remove(word_sprite)
             self.settings.word_count += 1
 
-    def _handle_word_speed_settings(self,ans):
-            parts = ans.split()
-            if len(parts) >= 3 and parts[2].isdigit():
-                speed = int(parts[2])
-                self.settings.word_speed_const = min(max(speed, self.settings.min_word_speed), self.settings.max_word_speed)
-
-    def _handle_max_health_settings(self,ans):
-            parts = ans.split()
-            if len(parts) >= 3 and parts[2].isdigit():
-                health = int(parts[2])
-                self.settings.max_health = min(max(health, self.settings.min_health), self.settings.max_health_limit)
+    def _handle_settings_command(self, command):
+        # typed versions of the arrow keys: 'speed 7', 'max health 5', 'rate fast', 'back'
+        parts = command.split()
+        if not parts or parts[0] in ('back', 'menu', 'settings'):
+            self.close_settings()
+            return
+        s = self.settings
+        value = parts[-1]
+        if 'speed' in parts and value.isdigit():
+            s.word_speed_const = min(max(int(value), s.min_word_speed), s.max_word_speed)
+        elif 'health' in parts and value.isdigit():
+            s.max_health = min(max(int(value), s.min_health), s.max_health_limit)
+        elif 'rate' in parts:
+            self._set_word_rate(value)

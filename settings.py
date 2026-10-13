@@ -6,8 +6,12 @@ class Settings:
         self.word_speed_const  = 5
         self.word_speed = int(self.word_speed_const)
         self.word_count = 0
-        self.game_active = False
-        self.go_settings = False
+        # which screen is showing: 'menu', 'settings', 'playing' or 'over'
+        self.state = 'menu'
+        # the screen 'back' returns to from settings
+        self.prev_state = 'menu'
+        # 'normal', or 'super' where every power up is ready at the start
+        self.mode = 'normal'
         self.max_health = 3
         self.health_remain = self.max_health
         self.reaching_right = True
@@ -36,7 +40,9 @@ class Settings:
         self.freeze_start = 0
 
         # how often (ms) a new word / power up tries to spawn
-        self.word_interval = 700
+        self.word_rates = {'slow': 1000, 'normal': 700, 'fast': 450}
+        self.word_rate = 'normal'
+        self.word_interval = self.word_rates[self.word_rate]
         self.powersup_interval = 2000
 
         # one colour per power up, used for the falling word and the top bar
@@ -59,6 +65,19 @@ class Settings:
         self.min_health, self.max_health_limit = 1, 10
 
         self.game_start = 0
+        self.game_time = 0
+
+        # words die when their right edge reaches this many pixels from the right of the screen
+        self.death_margin = 60
+
+    @property
+    def game_active(self):
+        return self.state == 'playing'
+
+    def wpm(self):
+        # words typed per minute of play; count at least 5 seconds so the first word doesn't read as 600 wpm
+        minutes = max(self.game_time, 5000) / 60000
+        return int(self.word_count / minutes)
 
 
     def initialize_stats(self):
@@ -82,4 +101,8 @@ class Settings:
         self.reverse = False
         self.timeslow= False
         self.freeze = False
+        if self.mode == 'super':
+            for name in self.powersup_colors:
+                setattr(self, name, True)
         self.game_start = pygame.time.get_ticks()
+        self.game_time = 0
